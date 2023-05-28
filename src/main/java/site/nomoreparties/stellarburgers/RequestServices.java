@@ -4,7 +4,10 @@ import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import site.nomoreparties.stellarburgers.pojo.Auth;
 import site.nomoreparties.stellarburgers.pojo.AuthResponse;
+import site.nomoreparties.stellarburgers.pojo.Ingredient;
 import site.nomoreparties.stellarburgers.pojo.User;
+
+import java.util.List;
 
 import static io.restassured.RestAssured.*;
 
@@ -52,6 +55,7 @@ public class RequestServices {
     }
     public ValidatableResponse readUser(String accessToken){
         return given()
+                .contentType(ContentType.JSON)
                 .auth().oauth2(accessToken)
                 .contentType(ContentType.JSON)
                 .when()
@@ -61,6 +65,7 @@ public class RequestServices {
 
     public ValidatableResponse updateUser(String accessToken, User user){
         return given()
+                .contentType(ContentType.JSON)
                 .auth().oauth2(accessToken)
                 .contentType(ContentType.JSON)
                 .and()
@@ -72,6 +77,7 @@ public class RequestServices {
 
     public ValidatableResponse deleteUser(String accessToken){
         return given()
+                .contentType(ContentType.JSON)
                 .auth().oauth2(accessToken)
                 .contentType(ContentType.JSON)
                 .when()
@@ -89,4 +95,35 @@ public class RequestServices {
         AuthResponse authResponse = response.extract().body().as(AuthResponse.class);
         return authResponse.getRefreshToken();
     }
+
+    public ValidatableResponse placeOrder(String token, List<String> ingredients) {
+        return given()
+                .contentType(ContentType.JSON)
+                .auth().oauth2(token)
+                .and()
+                .body(new Ingredient(ingredients))
+                .when()
+                .post(ORDER_PATH)
+                .then();
+    }
+
+    public ValidatableResponse getIngredients() {
+        return given()
+                .contentType(ContentType.JSON)
+                .when()
+                .get(INGREDIENTS_PATH)
+                .then();
+    }
+
+    public ValidatableResponse readOrders(String token) {
+        return given()
+                .contentType(ContentType.JSON)
+                .auth().oauth2(token)
+                .when()
+                .get(ORDER_PATH)
+                .then();
+    }
+
+
+
 }

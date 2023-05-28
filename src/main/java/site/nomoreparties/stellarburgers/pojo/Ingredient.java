@@ -2,10 +2,14 @@ package site.nomoreparties.stellarburgers.pojo;
 
 import java.util.List;
 
-public class Ingredients {
+public class Ingredient {
     public List<String> ingredients;
 
-    public Ingredients() {
+    public Ingredient() {
+    }
+
+    public Ingredient(List<String> ingredients) {
+        this.ingredients = ingredients;
     }
 
     public List<String> getIngredients() {
@@ -17,7 +21,7 @@ public class Ingredients {
         return ingredients;
     }
 
-    public Ingredients setIngredients(List<String> ingredients) {
+    public Ingredient setIngredients(List<String> ingredients) {
         this.ingredients = ingredients;
         return this;
     }

@@ -1,9 +1,17 @@
 package site.nomoreparties.stellarburgers.pojo;
 
+import java.util.List;
+
 public class OrderResponse {
     public String name;
     public Order order;
     public Boolean success;
+
+    public List<Data> data;
+
+    public List<Order> orders;
+    public int total;
+    public int totalToday;
 
     public OrderResponse() {
     }
@@ -28,7 +36,19 @@ public class OrderResponse {
         return success;
     }
 
-    public void setSuccess(Boolean success) {
-        this.success = success;
+    public List<Data> getData() {
+        return data;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public int getTotalToday() {
+        return totalToday;
     }
 }

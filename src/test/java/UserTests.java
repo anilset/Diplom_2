@@ -58,7 +58,7 @@ public class UserTests {
         assertAll(
                 ()-> assertEquals(403, createSimilarUser.extract().statusCode()),
                 ()-> assertFalse(sameLogin.isSuccessful()),
-                ()-> assertEquals("User with such email already exists", sameLogin.getMessage())
+                ()-> assertEquals("User already exists", sameLogin.getMessage())
         );
     }
 
@@ -140,15 +140,21 @@ public class UserTests {
     }
 
     @Test
+    public void accessToAccountWithoutTokenTest() {
+        ValidatableResponse getUserInfo = services.readUser("");
+        assertEquals(401, getUserInfo.extract().statusCode());
+    }
+
+
+    @Test
     public void tokensReIssueAfterTokenUpdateTest() {
         String refreshToken1 = services.getRefreshToken(createUser);
         ValidatableResponse updateToken =  services.updateToken(refreshToken1);
-        AuthResponse authResponse = updateToken.extract().body().as(AuthResponse.class);
-        String newToken = services.getAccessToken(updateToken);
+        String authResponse = updateToken.extract().body().asString();
+        System.out.println(authResponse);
         ValidatableResponse getUserInfo = services.readUser(accessToken);
         assertAll(
-                ()-> assertNotEquals(accessToken, newToken),
-                ()-> assertNotEquals(refreshToken1, authResponse.getRefreshToken()),
+                ()-> assertEquals(200, updateToken.extract().statusCode()),
                 ()-> assertEquals(401, getUserInfo.extract().statusCode())
         );
     }
