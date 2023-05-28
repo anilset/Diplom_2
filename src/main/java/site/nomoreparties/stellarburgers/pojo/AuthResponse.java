@@ -2,6 +2,8 @@ package site.nomoreparties.stellarburgers.pojo;
 
 public class AuthResponse {
     public Boolean success;
+
+    public String message;
     public String accessToken;
     public String refreshToken;
     public User user;
@@ -12,6 +14,7 @@ public class AuthResponse {
     public Boolean isSuccessful() {
         return success;
     }
+
 
     public void setSuccess(Boolean success) {
         this.success = success;
@@ -39,5 +42,9 @@ public class AuthResponse {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getMessage() {
+        return message;
     }
 }

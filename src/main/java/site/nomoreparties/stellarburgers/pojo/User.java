@@ -9,6 +9,10 @@ public class User{
     public User() {
     }
 
+    public User(String email) {
+        this.email = email;
+    }
+
     public User(String email, String password) {
         this.email = email;
         this.password = password;
@@ -24,8 +28,9 @@ public class User{
         return email;
     }
 
-    public void setEmail(String email) {
+    public User setEmail(String email) {
         this.email = email;
+        return this;
     }
 
     public String getPassword() {
@@ -40,7 +45,8 @@ public class User{
         return name;
     }
 
-    public void setName(String name) {
+    public User setName(String name) {
         this.name = name;
+        return this;
     }
 }
