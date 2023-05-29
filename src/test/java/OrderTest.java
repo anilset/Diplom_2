@@ -1,15 +1,13 @@
 import io.restassured.RestAssured;
 import io.restassured.response.ValidatableResponse;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import site.nomoreparties.stellarburgers.RequestServices;
 import site.nomoreparties.stellarburgers.Utilities;
 import site.nomoreparties.stellarburgers.pojo.*;
+import site.nomoreparties.stellarburgers.pojo.Order;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +44,10 @@ public class OrderTest {
         for(Data item : ingredientsData){
             availableIngredients.add(item.get_id());
         }
+    }
+
+    @BeforeEach()
+    public void getIngredients() {
         index1 = random.nextInt(availableIngredients.size());
         index2 = random.nextInt(availableIngredients.size());
     }
@@ -92,11 +94,20 @@ public class OrderTest {
     }
     @Test
     public void getUserOrdersTestWithAuth() {
-        ValidatableResponse orders = services.readOrders(accessToken);
-        Boolean isSuccessful = orders.extract().path("success");
+        ValidatableResponse initialResponse = services.readOrders(accessToken);
+        List<String> ordersBefore = initialResponse.extract().path("orders");
+        List<String> ingredients = new ArrayList<>(List
+                .of(availableIngredients.get(index1), availableIngredients.get(index2)));
+        services.placeOrder(accessToken, ingredients);
+        ValidatableResponse afterAddingResponse = services.readOrders(accessToken);
+        List<String> ordersAfter = afterAddingResponse.extract().path("orders");
+        System.out.println(afterAddingResponse.extract().body().asPrettyString());
+        Boolean isSuccessful = afterAddingResponse.extract().path("success");
         assertAll(
-                ()-> assertEquals(200, orders.extract().statusCode()),
-                ()-> assertTrue(isSuccessful)
+                ()-> assertEquals(200, afterAddingResponse.extract().statusCode()),
+                ()-> assertTrue(isSuccessful),
+                ()-> assertNotNull(afterAddingResponse.extract().path("orders._id")),
+                ()-> assertEquals(1, ordersAfter.size() - ordersBefore.size())
         );
     }
 

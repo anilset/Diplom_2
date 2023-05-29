@@ -5,6 +5,7 @@ import java.util.List;
 
 public class Order {
     public List<Ingredient> ingredients;
+    //public List<String> ingredients;
     public String _id;
     public Owner owner;
     public String status;
