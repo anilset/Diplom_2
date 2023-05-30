@@ -37,7 +37,6 @@ public class CreateUserParamsTest {
     public void createUserNegativeTest(String login, String password, String name) {
         createUser = services.createUser(login, password, name);
         AuthResponse response = createUser.extract().body().as(AuthResponse.class);
-        System.out.println(createUser.extract().body().asPrettyString());
         assertAll(
                 ()-> assertEquals(403, createUser.extract().statusCode()),
                 ()-> assertFalse(response.isSuccessful()),
