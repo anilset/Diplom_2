@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.of;
+import static site.nomoreparties.stellarburgers.LibraryAPI.BASE_URI;
 
 public class CreateUserParamsTest {
     private static RequestServices services;
@@ -19,7 +20,7 @@ public class CreateUserParamsTest {
 
     @BeforeEach
     public void setUp() {
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site/api/";
+        RestAssured.baseURI = BASE_URI;
         services = new RequestServices();
     }
 
@@ -31,7 +32,7 @@ public class CreateUserParamsTest {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Проверка создания пользователя без одного из обязательных полей")
     @MethodSource("provideDataForUser")
     public void createUserNegativeTest(String login, String password, String name) {
         createUser = services.createUser(login, password, name);

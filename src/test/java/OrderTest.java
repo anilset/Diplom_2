@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.of;
+import static site.nomoreparties.stellarburgers.LibraryAPI.BASE_URI;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class OrderTest {
@@ -32,7 +33,7 @@ public class OrderTest {
 
     @BeforeAll
     public void setUp() {
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site/api/";
+        RestAssured.baseURI = BASE_URI;
         services = new RequestServices();
         login = Utilities.getRandomLogin();
         pwd = Utilities.getRandomPwd();
@@ -60,7 +61,7 @@ public class OrderTest {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Проверка создания заказа")
     @MethodSource("provideIngredientsForOrder")
     public void createOrderPositiveTest(List<String> ingredients){
         ValidatableResponse createOrder = services.placeOrder(accessToken, ingredients);
@@ -86,13 +87,14 @@ public class OrderTest {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Проверка невозможности создания заказа без авторизации, ингредиентов. Заказ создается без авторизации")
     @MethodSource("provideInvalidDataForOrder")
     public void createOrderNegativeTest(String token, List<String> ingredients, Integer statusCode) {
         ValidatableResponse createOrder = services.placeOrder(token, ingredients);
         assertEquals(statusCode, createOrder.extract().statusCode());
     }
     @Test
+    @DisplayName("Проверка получения списка заказов")
     public void getUserOrdersTestWithAuth() {
         ValidatableResponse initialResponse = services.readOrders(accessToken);
         List<String> ordersBefore = initialResponse.extract().path("orders");
@@ -101,7 +103,6 @@ public class OrderTest {
         services.placeOrder(accessToken, ingredients);
         ValidatableResponse afterAddingResponse = services.readOrders(accessToken);
         List<String> ordersAfter = afterAddingResponse.extract().path("orders");
-        System.out.println(afterAddingResponse.extract().body().asPrettyString());
         Boolean isSuccessful = afterAddingResponse.extract().path("success");
         assertAll(
                 ()-> assertEquals(200, afterAddingResponse.extract().statusCode()),
@@ -110,8 +111,8 @@ public class OrderTest {
                 ()-> assertEquals(1, ordersAfter.size() - ordersBefore.size())
         );
     }
-
     @Test
+    @DisplayName("Проверка получения списка заказов без авторизации")
     public void getUserOrdersTestWithoutToken() {
         ValidatableResponse orders = services.readOrders("");
         AuthResponse response = orders.extract().body().as(AuthResponse.class);

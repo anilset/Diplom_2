@@ -1,7 +1,9 @@
+import io.qameta.allure.Description;
 import io.restassured.RestAssured;
 import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -15,6 +17,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.of;
+import static site.nomoreparties.stellarburgers.LibraryAPI.BASE_URI;
 
 
 public class UserTests {
@@ -27,7 +30,7 @@ public class UserTests {
 
     @BeforeEach
     public void setUp() {
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site/api/";
+        RestAssured.baseURI = BASE_URI;
         services = new RequestServices();
         login = Utilities.getRandomLogin();
         pwd = Utilities.getRandomPwd();
@@ -37,6 +40,7 @@ public class UserTests {
     }
 
     @Test
+    @DisplayName("Проверка создания пользователя")
     public void createUserPositiveTest() {
         AuthResponse response = createUser.extract().body().as(AuthResponse.class);
         User user = response.getUser();
@@ -51,6 +55,7 @@ public class UserTests {
     }
 
     @Test
+    @DisplayName("Проверка повторного создания пользователя с той же почтой/логином")
     public void createUserWithSimilarLoginTest() {
         ValidatableResponse createSimilarUser = services
                 .createUser(login, Utilities.getRandomPwd(), Utilities.getRandomString(11));
@@ -63,6 +68,7 @@ public class UserTests {
     }
 
     @Test
+    @DisplayName("Проверка входа в аккаунт с валидными credentials")
     public void loginTest() {
         ValidatableResponse response = services.login(login, pwd);
         AuthResponse loginByNewUser = response.extract().body().as(AuthResponse.class);
@@ -88,7 +94,7 @@ public class UserTests {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest (name = "Проверка логина без одного из/ без заполнения обоих полей и с невалидными credentials")
     @MethodSource("provideInvalidCredentials")
     public void invalidLoginTest(String login, String pwd){
         ValidatableResponse response = services.login(login, pwd);
@@ -101,7 +107,8 @@ public class UserTests {
     }
 
     @Test
-    public void accessTokenTest() {
+    @DisplayName("Проверка получения информации об аккаунте с полученным после регистрации токеном")
+    public void accessTokenAndGetUserCreatedTest() {
         ValidatableResponse getUserInfo = services.readUser(accessToken);
         AuthResponse userInfo = getUserInfo.extract().body().as(AuthResponse.class);
         User user = userInfo.getUser();
@@ -114,6 +121,8 @@ public class UserTests {
     }
 
     @Test
+    @DisplayName("Проверка выхода из аккаунта с refreshToken, подтверждение, что accessToken перестает работать после выхода из аккаунта")
+    @Description("Выпущенный при регистрации токен продолжает действовать после выхода из аккаунта")
     public void refreshTokenTest() {
         String refreshToken = services.getRefreshToken(createUser);
         ValidatableResponse logout = services.logout(refreshToken);
@@ -125,6 +134,8 @@ public class UserTests {
     }
 
     @Test
+    @DisplayName("Проверка выпуска новой пары токенов и что прежний токен перестает действовать после нового логина")
+    @Description("Выпущенный при регистрации токен продолжает действовать после нового логина")
     public void tokensReIssueAfterNewLoginTest() {
         String refreshToken1 = services.getRefreshToken(createUser);
         services.logout(refreshToken1);
@@ -140,6 +151,7 @@ public class UserTests {
     }
 
     @Test
+    @DisplayName("Проверка доступа к аакаунту без авторизации")
     public void accessToAccountWithoutTokenTest() {
         ValidatableResponse getUserInfo = services.readUser("");
         assertEquals(401, getUserInfo.extract().statusCode());
@@ -147,11 +159,11 @@ public class UserTests {
 
 
     @Test
+    @DisplayName("Проверка обновления токена запросом на обновление с refreshToken в теле")
+    @Description("Прежний токен продолжает работать после обновления токенов")
     public void tokensReIssueAfterTokenUpdateTest() {
         String refreshToken1 = services.getRefreshToken(createUser);
         ValidatableResponse updateToken =  services.updateToken(refreshToken1);
-        String authResponse = updateToken.extract().body().asString();
-        System.out.println(authResponse);
         ValidatableResponse getUserInfo = services.readUser(accessToken);
         assertAll(
                 ()-> assertEquals(200, updateToken.extract().statusCode()),
@@ -160,6 +172,7 @@ public class UserTests {
     }
 
     @Test
+    @DisplayName("Проверка редактирования пользователя: поля имя и email")
     public void editUser() {
         String newName = Utilities.getRandomString(15);
         String newLogin = Utilities.getRandomLogin().toLowerCase();
@@ -167,12 +180,26 @@ public class UserTests {
         ValidatableResponse editUser = services.updateUser(accessToken, user);
         AuthResponse updatedUser = editUser.extract().body().as(AuthResponse.class);
         User userEdited = updatedUser.getUser();
-        System.out.println(editUser.extract().body().asPrettyString());
         assertAll(
                 ()-> assertEquals(200, editUser.extract().statusCode()),
                 ()-> assertTrue(updatedUser.isSuccessful()),
                 ()-> assertEquals(newLogin, userEdited.getEmail()),
                 ()-> assertEquals(newName, userEdited.getName())
+        );
+    }
+
+    @Test
+    @DisplayName("Проверка редактирования пользователя: изменение пароля")
+    public void editUserPwd() {
+        String newPwd = Utilities.getRandomPwd();
+        User user = new User().setPassword(newPwd);
+        ValidatableResponse editUser = services.updateUser(accessToken, user);
+        ValidatableResponse loginWithNewPwd = services.login(login, newPwd);
+        ValidatableResponse loginWithOldPwd = services.login(login, pwd);
+        assertAll(
+                ()-> assertEquals(200, editUser.extract().statusCode()),
+                ()-> assertEquals(200, loginWithNewPwd.extract().statusCode()),
+                ()-> assertEquals(401, loginWithOldPwd.extract().statusCode())
         );
     }
 
@@ -183,7 +210,7 @@ public class UserTests {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest (name = "Проверка редактирования пользователя без токена и с невалидным токеном")
     @MethodSource("provideInvalidTokens")
     public void editUserWithInvalidToken(String token, int statusCode) {
         String newName = "newName";
