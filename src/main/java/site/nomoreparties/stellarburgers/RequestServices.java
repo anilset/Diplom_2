@@ -2,10 +2,7 @@ package site.nomoreparties.stellarburgers;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
-import site.nomoreparties.stellarburgers.pojo.Auth;
-import site.nomoreparties.stellarburgers.pojo.AuthResponse;
-import site.nomoreparties.stellarburgers.pojo.Ingredient;
-import site.nomoreparties.stellarburgers.pojo.User;
+import site.nomoreparties.stellarburgers.pojo.*;
 
 import java.util.List;
 
@@ -85,7 +82,7 @@ public class RequestServices {
                 .then();
     }
 
-    public static String getAccessToken(ValidatableResponse response) {
+    public String getAccessToken(ValidatableResponse response) {
         AuthResponse authResponse = response.extract().body().as(AuthResponse.class);
         String[] bearerToken = authResponse.getAccessToken().split(" ");
         return bearerToken[1];

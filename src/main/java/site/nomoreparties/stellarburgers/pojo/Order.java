@@ -12,13 +12,13 @@ public class Order {
     public String name;
     public Date createdAt;
     public Date updatedAt;
-    public int number;
-    public int price;
+    public Integer number;
+    public Integer price;
 
     public Order() {
     }
 
-    public int getNumber() {
+    public Integer getNumber() {
         return number;
     }
 
@@ -50,7 +50,7 @@ public class Order {
         return updatedAt;
     }
 
-    public int getPrice() {
+    public Integer getPrice() {
         return price;
     }
 }
